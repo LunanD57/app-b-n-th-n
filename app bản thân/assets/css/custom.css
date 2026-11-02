@@ -1,0 +1,170 @@
+/* Custom Styles & Enhancements for BetterMe App */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+/* Glassmorphism effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+}
+
+.dark .glass-panel {
+  background: rgba(24, 24, 27, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+}
+
+/* Card Hover Animations */
+.card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Animations */
+.modal-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+/* Priority & Category Badges */
+.badge-growth {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.dark .badge-growth {
+  background: rgba(109, 40, 217, 0.2);
+  color: #c4b5fd;
+}
+
+.badge-health {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.dark .badge-health {
+  background: rgba(185, 28, 28, 0.2);
+  color: #fca5a5;
+}
+
+.badge-work {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.dark .badge-work {
+  background: rgba(29, 78, 216, 0.2);
+  color: #93c5fd;
+}
+
+.badge-mind {
+  background: #d1fae5;
+  color: #047857;
+}
+.dark .badge-mind {
+  background: rgba(4, 120, 87, 0.2);
+  color: #6ee7b7;
+}
+
+.badge-life {
+  background: #fef3c7;
+  color: #b45309;
+}
+.dark .badge-life {
+  background: rgba(180, 83, 9, 0.2);
+  color: #fde68a;
+}
+
+/* Checkbox animation */
+.task-checkbox:checked + div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Pulse indicator */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Print styles for printing the weekly schedule */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .glass-panel {
+    border: 1px solid #ccc !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+}

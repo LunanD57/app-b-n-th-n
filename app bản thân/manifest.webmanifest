@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "LunanD",
+  "short_name": "LunanD",
+  "description": "Lịch trình cá nhân và quản lý chi tiêu",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#1e6091",
+  "icons": [{ "src": "./assets/lunand-icon-180.png", "sizes": "180x180", "type": "image/png" }, { "src": "./assets/lunand-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+}

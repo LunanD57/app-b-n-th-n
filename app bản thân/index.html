@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LunanD</title>
+  <meta name="theme-color" content="#1e6091">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LunanD">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/lunand-icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/lunand-icon-180.png">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: rgba(75, 85, 99, 0.5);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.8);
+    }
+
+    /* Glass Effect */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glass-card {
+      background: rgba(24, 24, 27, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Modal Animation */
+    .modal-backdrop {
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      transform: scale(0.96) translateY(8px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-backdrop.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Task Item Hover */
+    .task-card-item {
+      transition: all 0.18s ease-in-out;
+    }
+    .task-card-item:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    }
+    .dark .task-card-item:hover {
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+    }
+    .task-card-item.completed {
+      opacity: 0.5;
+      filter: grayscale(0.5);
+    }
+      .time-wheel-picker { display:flex; align-items:flex-start; justify-content:center; gap:6px; position:relative; height:108px; overflow:hidden; }
+    .time-wheel-picker::after { content:''; position:absolute; z-index:0; pointer-events:none; inset:36px 0 auto; height:36px; border:2px solid rgba(37,99,235,.7); border-radius:9px; background:rgba(37,99,235,.08); }
+    .time-wheel { position:relative; z-index:1; box-sizing:border-box; width:64px; height:108px; overflow-y:auto; padding:0; scrollbar-width:none; overscroll-behavior:contain; scroll-snap-type:y mandatory; scroll-padding-block:36px; touch-action:pan-y; cursor:grab; text-align:center; }
+    .time-wheel::-webkit-scrollbar { display:none; }
+    .time-wheel-spacer { height:36px; flex:0 0 36px; }
+    .time-wheel-item { height:36px; line-height:36px; scroll-snap-align:center; scroll-snap-stop:always; font:500 16px ui-monospace,monospace; color:#a1a1aa; user-select:none; }
+    .time-wheel-item.selected { color:#1d4ed8; font-weight:900; }
+    .dark .time-wheel-item.selected { color:#bfdbfe; }
+    .time-wheel-separator { position:relative; z-index:1; line-height:108px; font-weight:800; }
+</style>
+</head>
+<body class="bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- HEADER / NAVBAR CHÍNH -->
+  <header class="sticky top-0 z-30 glass-card border-b border-zinc-200/80 dark:border-zinc-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & App Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-calendar-week text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-500 bg-clip-text text-transparent">
+            LunanD
+          </h1>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium hidden sm:block">
+            Kỷ luật tạo nên tự do • Quản lý tuần & Tài chính
+          </p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Desktop) -->
+      <nav class="hidden md:flex items-center gap-1.5 bg-zinc-200/60 dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-300/40 dark:border-zinc-800">
+        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+          <i class="fa-solid fa-chart-pie"></i>
+          Tổng Quan
+        </button>
+        <button onclick="switchTab('schedule')" id="nav-btn-schedule" class="nav-tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60">
+          <i class="fa-solid fa-table-cells"></i>
+          Thời Khóa Biểu Tuần
+        </button>
+        <button onclick="switchTab('finance')" id="nav-btn-finance" class="nav-tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60">
+          <i class="fa-solid fa-wallet"></i>
+          Quản Lý Chi Tiêu
+        </button>
+        <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60">
+          <i class="fa-solid fa-database"></i>
+          Dữ Liệu & Cài Đặt
+        </button>
+      </nav>
+
+      <!-- Right Controls: Dark Mode Toggle & Live Clock -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Live Clock badge -->
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-200/50 dark:bg-zinc-900/60 border border-zinc-300/50 dark:border-zinc-800 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300">
+          <i class="fa-regular fa-clock text-blue-500"></i>
+          <span id="live-clock">--:--:--</span>
+        </div>
+
+        <!-- Dark Mode Toggle Button -->
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" class="w-10 h-10 rounded-xl bg-zinc-200/70 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition" title="Chuyển chế độ Sáng / Tối">
+          <i class="fa-solid fa-moon text-sm" id="dark-icon"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+
+    <!-- ========================================== -->
+    <!-- 1. MÀN HÌNH TỔNG QUAN (DASHBOARD)          -->
+    <!-- ========================================== -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Hero Banner & Lời Chào & Động Lực Mỗi Ngày -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900 via-indigo-950 to-zinc-950 text-white p-6 sm:p-8 border border-blue-500/20 shadow-2xl">
+        <div class="absolute -right-16 -top-16 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">
+              <i class="fa-solid fa-fire text-amber-400"></i>
+              <span id="dash-streak">7 ngày kỷ luật liên tiếp</span>
+            </div>
+            <h2 id="dash-greeting" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Chào bạn, chúc bạn một ngày kỷ luật và hiệu quả!
+            </h2>
+            <p id="dash-date" class="text-xs sm:text-sm text-zinc-400 font-medium">
+              --
+            </p>
+            
+            <!-- Daily Motivational Quote -->
+            <div class="pt-3 border-t border-zinc-800/80">
+              <div class="flex items-start gap-3">
+                <i class="fa-solid fa-quote-left text-blue-400 text-lg mt-0.5 shrink-0"></i>
+                <div>
+                  <p id="quote-text" class="text-xs sm:text-sm italic text-zinc-300 leading-relaxed font-normal">
+                    "Chúng ta không thể thay đổi quá khứ, nhưng có thể kiến tạo tương lai bắt đầu từ kỷ luật hôm nay."
+                  </p>
+                  <p id="quote-author" class="text-[11px] font-semibold text-blue-400 mt-1">
+                    — Marcus Aurelius
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex flex-row md:flex-col gap-2.5 shrink-0">
+            <button onclick="switchTab('schedule')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 transition">
+              <i class="fa-solid fa-table-cells"></i>
+              Xem Bảng Lịch Tuần
+            </button>
+            <button onclick="openAddTransactionModal('expense')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-xs font-bold transition">
+              <i class="fa-solid fa-receipt text-rose-400"></i>
+              Ghi Khoản Chi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- KPI 1: Tỷ lệ hoàn thành công việc tuần -->
+        <div class="glass-card p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tiến Độ Kỷ Luật Tuần</span>
+            <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-baseline justify-between mb-2">
+              <span id="kpi-schedule-percent" class="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">0%</span>
+              <span id="kpi-schedule-fraction" class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">0/0 việc</span>
+            </div>
+            <div class="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div id="kpi-schedule-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 2: Tổng chi tiêu tuần -->
+        <div class="glass-card p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Chi Tiêu Tuần Này</span>
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+          </div>
+          <div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 mb-1" id="kpi-week-expense">
+              0 ₫
+            </div>
+            <p id="kpi-week-budget-hint" class="text-xs text-zinc-500 dark:text-zinc-400">
+              Hạn mức: <span id="kpi-budget-target">1.500.000 ₫</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- KPI 3: Chi tiêu tháng -->
+        <div class="glass-card p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Chi Tiêu Tháng Này</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-calendar-days"></i>
+            </div>
+          </div>
+          <div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-zinc-800 dark:text-zinc-100 mb-1" id="kpi-month-expense">
+              0 ₫
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+              Tổng chi tiêu cả tháng
+            </p>
+          </div>
+        </div>
+
+        <!-- KPI 4: Số dư hiện tại -->
+        <div class="glass-card p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Số Dư Tích Luỹ</span>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-vault"></i>
+            </div>
+          </div>
+          <div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mb-1" id="kpi-net-balance">
+              0 ₫
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+              (Tổng thu - Tổng chi)
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Dashboard Two Columns: Today Tasks & Spending Overview -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Cột trái: Việc trọng tâm hôm nay -->
+        <div class="glass-card p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-calendar-day"></i>
+              </div>
+              <h3 class="font-extrabold text-base text-zinc-900 dark:text-zinc-100">
+                Lịch Trình Của Bạn Hôm Nay
+              </h3>
+            </div>
+            <button onclick="switchTab('schedule')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              Xem bảng cả tuần <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <div id="dash-today-tasks-container" class="space-y-2.5 flex-1 min-h-[220px]">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Cột phải: Ngân sách & Tỷ lệ chi tiêu -->
+        <div class="glass-card p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-chart-pie"></i>
+              </div>
+              <h3 class="font-extrabold text-base text-zinc-900 dark:text-zinc-100">
+                Cơ Cấu Chi Tiêu
+              </h3>
+            </div>
+            <button onclick="switchTab('finance')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              Chi tiết tài chính <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <!-- Chart Area -->
+          <div class="relative h-48 sm:h-56 flex items-center justify-center">
+            <canvas id="dash-chart-doughnut"></canvas>
+          </div>
+
+          <!-- Hạn mức cảnh báo mini -->
+          <div class="mt-4 pt-3 border-t border-zinc-200/60 dark:border-zinc-800/60">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-semibold text-zinc-600 dark:text-zinc-400">Kiểm soát ngân sách tuần:</span>
+              <span id="dash-budget-percent" class="font-bold">0%</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+              <div id="dash-budget-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 2. THỜI KHÓA BIỂU TUẦN (SCHEDULE MATRIX)   -->
+    <!-- ========================================== -->
+    <section id="tab-schedule" class="tab-content space-y-6 hidden">
+      
+      <!-- Top Action Bar for Schedule -->
+      <div class="glass-card p-5 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Thời Khóa Biểu 1 Tuần</h2>
+            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+              Bảng Ma Trận Chuẩn
+            </span>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            Thiết kế trực quan dạng bảng 7 ngày (Thứ 2 đến Chủ Nhật) theo đúng phân bổ lịch trình của bạn.
+          </p>
+        </div>
+
+        <!-- Controls: Thêm việc, Làm mới tuần & In ấn -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Chú thích danh mục màu (Legend) -->
+          <div class="hidden xl:flex items-center gap-2 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mr-2">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-sky-400"></span> Trường</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span> Gym</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-purple-400"></span> Game</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-pink-400"></span> Date</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></span> Tiếng Anh</span>
+          </div>
+
+          <!-- Nút Làm mới tuần mới -->
+          <button onclick="resetWeeklyTasksCheckmarks()" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition" title="Bỏ tích toàn bộ công việc định kỳ để bắt đầu tuần mới">
+            <i class="fa-solid fa-rotate-left"></i>
+            Làm mới tuần mới
+          </button>
+
+          <!-- Nút Thêm công việc -->
+          <button onclick="openAddTaskModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 transition">
+            <i class="fa-solid fa-plus"></i>
+            Thêm công việc
+          </button>
+        </div>
+      </div>
+
+      <!-- BẢNG THỜI KHÓA BIỂU DẠNG MA TRẬN 7 CỘT CHUẨN (HORIZONTALLY SCROLLABLE TABLE) -->
+      <div class="glass-card rounded-3xl border border-zinc-200/90 dark:border-zinc-800 shadow-lg overflow-hidden">
+        
+        <!-- Header thông báo cuộn trên màn hình nhỏ -->
+        <div class="xl:hidden bg-blue-50 dark:bg-blue-950/40 px-4 py-2 text-center text-xs font-semibold text-blue-700 dark:text-blue-300 border-b border-blue-100 dark:border-blue-900/40">
+          <i class="fa-solid fa-arrows-left-right mr-1.5"></i> Vuốt ngang để xem trọn vẹn cả 7 ngày trong tuần
+        </div>
+
+        <div class="overflow-x-auto">
+          <div class="min-w-[1100px] w-full">
+            
+            <!-- HEADER BẢNG: 7 CỘT MÀU XANH DƯƠNG CHUẨN NHƯ HÌNH ẢNH -->
+            <div class="grid grid-cols-7 bg-[#1e6091] dark:bg-[#184e77] text-white font-extrabold text-center text-sm tracking-wide shadow-md divide-x divide-blue-400/30">
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-1">
+                <span>Thứ 2</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-2">
+                <span>Thứ 3</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-3">
+                <span>Thứ 4</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-4">
+                <span>Thứ 5</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-5">
+                <span>Thứ 6</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-6">
+                <span>Thứ 7</span>
+              </div>
+              <div class="py-3 px-2 flex items-center justify-center gap-1.5" id="header-col-0">
+                <span>Chủ Nhật</span>
+              </div>
+            </div>
+
+            <!-- THÂN BẢNG: 7 CỘT CHỨA CÁC BLOCK THẺ THEO THỜI GIAN -->
+            <div id="timetable-matrix-body" class="grid grid-cols-7 divide-x divide-zinc-200 dark:divide-zinc-800 bg-white/70 dark:bg-zinc-900/60 min-h-[180px]">
+              <!-- 7 Cột từ Thứ 2 đến Chủ Nhật được Render bằng JS -->
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 3. QUẢN LÝ CHI TIÊU (FINANCE)              -->
+    <!-- ========================================== -->
+    <section id="tab-finance" class="tab-content space-y-6 hidden">
+      
+      <!-- Top Bar: Hạn Mức Tuần & Cảnh Báo -->
+      <div class="glass-card p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Quản Lý Chi Tiêu & Tài Chính</h2>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              Kiểm soát dòng tiền, chi tiêu có mục đích, xây dựng nền tảng tài chính cá nhân bền vững.
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button onclick="openBudgetSettingModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-xs font-bold transition">
+              <i class="fa-solid fa-sliders text-blue-500"></i>
+              Cài Hạn Mức Tuần
+            </button>
+            <button onclick="openAddTransactionModal('expense')" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition">
+              <i class="fa-solid fa-minus"></i>
+              Thêm Khoản Chi
+            </button>
+            <button onclick="openAddTransactionModal('income')" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition">
+              <i class="fa-solid fa-plus"></i>
+              Thêm Khoản Thu
+            </button>
+          </div>
+        </div>
+
+        <!-- Weekly Budget Warning Meter -->
+        <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 space-y-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-zinc-700 dark:text-zinc-300">Hạn Mức Chi Tiêu Tuần Này:</span>
+              <span id="budget-status-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                An toàn
+              </span>
+            </div>
+            <div class="text-xs font-mono">
+              <span id="budget-current-spent" class="font-bold text-rose-500">0 ₫</span> / 
+              <span id="budget-limit-display" class="font-bold text-zinc-800 dark:text-zinc-200">1.500.000 ₫</span>
+              (<span id="budget-percent-text">0%</span>)
+            </div>
+          </div>
+
+          <!-- Progress Bar with dynamic color warning -->
+          <div class="w-full h-3 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+            <div id="budget-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+
+          <div id="budget-alert-message" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Tiếp tục duy trì thói quen chi tiêu thông minh!
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Financial Totals Summary (3 Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Tổng thu -->
+        <div class="glass-card p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tổng Thu Nhập</span>
+            <div class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1" id="fin-total-income">
+              0 ₫
+            </div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base">
+            <i class="fa-solid fa-arrow-down-long"></i>
+          </div>
+        </div>
+
+        <!-- Tổng chi -->
+        <div class="glass-card p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tổng Chi Tiêu</span>
+            <div class="text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1" id="fin-total-expense">
+              0 ₫
+            </div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base">
+            <i class="fa-solid fa-arrow-up-long"></i>
+          </div>
+        </div>
+
+        <!-- Số dư -->
+        <div class="glass-card p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Số Dư Thực Tế</span>
+            <div class="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1" id="fin-net-balance">
+              0 ₫
+            </div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Chart & Transactions History -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Biểu đồ tỷ lệ chi tiêu (5 cols) -->
+        <div class="lg:col-span-5 glass-card p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 mb-4">
+            <h3 class="font-extrabold text-base text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-blue-500"></i>
+              Biểu Đồ Danh Mục Chi
+            </h3>
+          </div>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="finance-doughnut-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Lịch sử giao dịch & Bộ lọc (7 cols) -->
+        <div class="lg:col-span-7 glass-card p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60 mb-4">
+            <h3 class="font-extrabold text-base text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
+              Lịch Sử Giao Dịch
+            </h3>
+            
+            <!-- Bộ lọc danh mục -->
+            <div class="flex items-center gap-2">
+              <select id="filter-tx-category" onchange="renderTransactionsList()" class="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all">Tất cả danh mục</option>
+                <option value="food">Ăn uống</option>
+                <option value="transport">Di chuyển</option>
+                <option value="education">Học tập</option>
+                <option value="entertainment">Giải trí</option>
+                <option value="savings">Tiết kiệm</option>
+                <option value="other_expense">Khác</option>
+                <option value="income">Thu nhập</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Danh sách giao dịch cuộn -->
+          <div id="transactions-list-container" class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 4. CÀI ĐẶT & SAO LƯU DỮ LIỆU (SETTINGS)     -->
+    <!-- ========================================== -->
+    <section id="tab-settings" class="tab-content space-y-6 hidden">
+      
+      <div class="glass-card p-6 sm:p-8 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm max-w-3xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="border-b border-zinc-200/60 dark:border-zinc-800/60 pb-5">
+          <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Cài Đặt & Sao Lưu Dữ Liệu</h2>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            Toàn bộ dữ liệu của bạn được lưu an toàn trong trình duyệt (localStorage). Bạn có thể sao lưu ra file để không bao giờ bị mất.
+          </p>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Đồng bộ giữa web và iPhone</h3>
+          <p id="cloud-sync-status" class="text-xs text-zinc-500 dark:text-zinc-400">Chưa kết nối kho đồng bộ.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input id="cloud-email" type="email" autocomplete="email" placeholder="Email" class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm">
+            <input id="cloud-password" type="password" autocomplete="current-password" placeholder="Mật khẩu" class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm">
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="signInCloudSync()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Đăng nhập</button>
+            <button onclick="signUpCloudSync()" class="px-4 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-xs font-bold">Tạo tài khoản</button>
+            <button onclick="signOutCloudSync()" class="px-4 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-xs font-bold">Đăng xuất</button>
+          </div>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Lần đầu, đăng nhập trên thiết bị đang có dữ liệu mới nhất trước. Sau đó đăng nhập cùng tài khoản trên iPhone. Mỗi tài khoản chỉ truy cập dữ liệu của chính mình.</p>
+        </div>
+        <!-- User Profile Form -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            1. Thông Tin Bản Thân
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Tên của bạn:</label>
+              <input type="text" id="setting-user-name" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="VD: Hoàng Long">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Chuỗi ngày kỷ luật (Streak):</label>
+              <input type="number" id="setting-user-streak" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" min="0">
+            </div>
+          </div>
+          <button onclick="saveUserProfileSettings()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
+            Lưu Thông Tin
+          </button>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div class="space-y-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            2. Sao Lưu (Backup) & Khôi Phục (Restore)
+          </h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">
+            Xuất dữ liệu thành file `.json` để lưu trên máy tính, Google Drive hoặc chuyển sang máy khác bất cứ lúc nào.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="exportBackupJSON()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition">
+              <i class="fa-solid fa-file-export"></i>
+              Xuất dữ liệu (Backup JSON)
+            </button>
+            
+            <label class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-blue-600/20 transition">
+              <i class="fa-solid fa-file-import"></i>
+              <span>Nhập dữ liệu từ file</span>
+              <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="importBackupJSON(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="space-y-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+            3. Vùng Nguy Hiểm
+          </h3>
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="restoreSampleData()" class="px-4 py-2.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition">
+              Khôi phục thời khóa biểu mẫu (Chuẩn như ảnh)
+            </button>
+            <button onclick="clearAllData()" class="px-4 py-2.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition">
+              Xóa sạch toàn bộ dữ liệu
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-30 glass-card border-t border-zinc-200/80 dark:border-zinc-800/80 px-4 py-2 flex items-center justify-around">
+    <button onclick="switchTab('dashboard')" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400" data-target="dashboard">
+      <i class="fa-solid fa-chart-pie text-base"></i>
+      <span>Tổng quan</span>
+    </button>
+    <button onclick="switchTab('schedule')" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400" data-target="schedule">
+      <i class="fa-solid fa-table-cells text-base"></i>
+      <span>Lịch tuần</span>
+    </button>
+    <button onclick="switchTab('finance')" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400" data-target="finance">
+      <i class="fa-solid fa-wallet text-base"></i>
+      <span>Chi tiêu</span>
+    </button>
+    <button onclick="switchTab('settings')" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400" data-target="settings">
+      <i class="fa-solid fa-gear text-base"></i>
+      <span>Cài đặt</span>
+    </button>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODALS (CỬA SỔ POPUP)                     -->
+  <!-- ========================================== -->
+
+  <!-- 1. Modal Thêm / Sửa Công Việc Thời Khóa Biểu -->
+  <div id="task-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-sm">
+    <div class="modal-content w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <h3 id="task-modal-title" class="font-extrabold text-base text-zinc-900 dark:text-zinc-100">
+          Thêm Việc Vào Lịch Tuần
+        </h3>
+        <button onclick="closeTaskModal()" class="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="task-form" onsubmit="handleSaveTask(event)" class="space-y-4">
+        <input type="hidden" id="task-id">
+
+        <!-- Danh mục hoạt động -->
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+            Loại hoạt động / Huy hiệu:
+          </label>
+          <select id="task-category" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="school">🎓 HỌC TRƯỜNG (Xanh dương)</option>
+            <option value="gym">🏋️ TẬP GYM (Vàng cam)</option>
+            <option value="game">🎮 RA NET / GAME (Tím phấn)</option>
+            <option value="date">💖 ĐI DATE / HẸN HÒ (Hồng)</option>
+            <option value="self_study">📚 TỰ HỌC 1 / TỰ HỌC 2 (Chàm xám)</option>
+            <option value="english">🇬🇧 TIẾNG ANH NGOÀI (Xanh lá)</option>
+            <option value="life" selected>☀️ SINH HOẠT / DẬY ĂN SÁNG (Tối giản)</option>
+            <option value="sleep">🌙 GIẤC NGỦ (Ban đêm)</option>
+          </select>
+        </div>
+
+        <!-- Tên việc & Mô tả chi tiết -->
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+            Nội dung chi tiết <span class="text-rose-500">*</span>:
+          </label>
+          <input type="text" id="task-title" required placeholder="VD: Tiết 1 - 6: TH Lập trình HĐT..." class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Ngày trong tuần -->
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Ngày trong tuần:</label>
+            <select id="task-day" class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="1">Thứ Hai</option>
+              <option value="2">Thứ Ba</option>
+              <option value="3">Thứ Tư</option>
+              <option value="4">Thứ Năm</option>
+              <option value="5">Thứ Sáu</option>
+              <option value="6">Thứ Bảy</option>
+              <option value="0">Chủ Nhật</option>
+            </select>
+          </div>
+
+          <!-- Khung giờ -->
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Khung giờ:</label>
+            <div id="task-time-controls" class="space-y-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-3">
+  <input type="hidden" id="task-time-start" value="420"><input type="hidden" id="task-time-end" value="510">
+  <div><div class="flex justify-between text-[10px] mb-1"><span>Giờ bắt đầu</span><output id="task-time-start-label" class="font-mono font-bold">07:00</output></div><div id="task-time-start-picker" class="time-wheel-picker" aria-label="Chọn giờ bắt đầu"></div></div>
+  <div><div class="flex justify-between text-[10px] mb-1"><span>Giờ kết thúc</span><output id="task-time-end-label" class="font-mono font-bold">08:30</output></div><div id="task-time-end-picker" class="time-wheel-picker" aria-label="Chọn giờ kết thúc"></div></div>
+</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Mức độ ưu tiên:</label>
+          <select id="task-priority" class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="normal" selected>Bình thường</option>
+            <option value="high">🔴 Cao / Quan trọng</option>
+            <option value="low">Thấp / Tự do</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            Hủy
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30">
+            Lưu Công Việc
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 2. Modal Thêm Giao Dịch Chi Tiêu / Thu Nhập -->
+  <div id="tx-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-sm">
+    <div class="modal-content w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <h3 id="tx-modal-title" class="font-extrabold text-base text-zinc-900 dark:text-zinc-100">
+          Ghi Chép Giao Dịch
+        </h3>
+        <button onclick="closeTxModal()" class="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="tx-form" onsubmit="handleSaveTransaction(event)" class="space-y-4">
+        
+        <!-- Loại giao dịch (Chi / Thu) -->
+        <div class="grid grid-cols-2 gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-2xl">
+          <label class="flex items-center justify-center gap-2 py-2 rounded-xl cursor-pointer text-xs font-bold transition has-[:checked]:bg-rose-600 has-[:checked]:text-white text-zinc-600 dark:text-zinc-400">
+            <input type="radio" name="tx-type" value="expense" checked class="hidden" onchange="updateCategoryOptions('expense')">
+            <i class="fa-solid fa-arrow-down-long"></i>
+            Khoản Chi Tiêu
+          </label>
+          <label class="flex items-center justify-center gap-2 py-2 rounded-xl cursor-pointer text-xs font-bold transition has-[:checked]:bg-emerald-600 has-[:checked]:text-white text-zinc-600 dark:text-zinc-400">
+            <input type="radio" name="tx-type" value="income" class="hidden" onchange="updateCategoryOptions('income')">
+            <i class="fa-solid fa-arrow-up-long"></i>
+            Khoản Thu Nhập
+          </label>
+        </div>
+
+        <!-- Số tiền (VNĐ) -->
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+            Số tiền (VNĐ) <span class="text-rose-500">*</span>:
+          </label>
+          <div class="relative">
+            <input type="number" id="tx-amount" required min="1000" step="1000" placeholder="VD: 50000" class="w-full pl-4 pr-12 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">₫</span>
+          </div>
+          <!-- Gợi ý chọn nhanh số tiền -->
+          <div class="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1">
+            <button type="button" onclick="setTxAmount(25000)" class="px-2 py-0.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-blue-500 hover:text-white transition">+25k</button>
+            <button type="button" onclick="setTxAmount(50000)" class="px-2 py-0.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-blue-500 hover:text-white transition">+50k</button>
+            <button type="button" onclick="setTxAmount(100000)" class="px-2 py-0.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-blue-500 hover:text-white transition">+100k</button>
+            <button type="button" onclick="setTxAmount(200000)" class="px-2 py-0.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-blue-500 hover:text-white transition">+200k</button>
+            <button type="button" onclick="setTxAmount(500000)" class="px-2 py-0.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-blue-500 hover:text-white transition">+500k</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Danh mục -->
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Danh mục:</label>
+            <select id="tx-category" class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <!-- Rendered via JS -->
+            </select>
+          </div>
+
+          <!-- Ngày giao dịch -->
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Ngày tháng:</label>
+            <input type="date" id="tx-date" required class="w-full px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <!-- Ghi chú -->
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Ghi chú chi tiết:</label>
+          <input type="text" id="tx-note" placeholder="VD: Nạp thẻ game, mua sách, ăn tối..." class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeTxModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            Hủy
+          </button>
+          <button id="tx-submit-button" type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30">
+            Lưu Giao Dịch
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 3. Modal Cài Hạn Mức Chi Tiêu Tuần -->
+  <div id="budget-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-sm">
+    <div class="modal-content w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <h3 class="font-extrabold text-base text-zinc-900 dark:text-zinc-100">
+          Cài Hạn Mức Chi Tiêu Tuần
+        </h3>
+        <button onclick="closeBudgetModal()" class="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+          Đặt mức chi tối đa cho mỗi tuần. Khi chi tiêu vượt 80% sẽ cảnh báo vàng, và chuyển đỏ khi vượt mức.
+        </p>
+        <div>
+          <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">Số tiền hạn mức (VNĐ):</label>
+          <div class="relative">
+            <input type="number" id="setting-weekly-budget" min="100000" step="50000" class="w-full pl-4 pr-12 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">₫</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <button onclick="closeBudgetModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          Hủy
+        </button>
+        <button onclick="saveWeeklyBudgetSetting()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30">
+          Cập Nhật Hạn Mức
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast Notification Container -->
+  <div id="toast-box" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT THUẦN (TRỌN GÓI LOGIC)          -->
+  <!-- ========================================== -->
+    <script src="./supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+    /**
+     * PERSONAL LIFE OS - TIME-TABLE MATRIX & FINANCE TRACKER
+     */
+    const STORAGE_KEY = 'personal_life_os_data_v2';
+
+    // Bảng cấu hình danh mục Hoạt động / Thời khóa biểu chuẩn theo hình ảnh
+    const TIMETABLE_CATEGORIES = {
+      school: {
+        label: 'HỌC TRƯỜNG',
+        bg: 'bg-sky-50 dark:bg-sky-950/40',
+        border: 'border-sky-300 dark:border-sky-800',
+        badge: 'bg-sky-100 text-sky-800 dark:bg-sky-900/80 dark:text-sky-200',
+        text: 'text-sky-950 dark:text-sky-100'
+      },
+      gym: {
+        label: 'TẬP GYM',
+        bg: 'bg-amber-50 dark:bg-amber-950/40',
+        border: 'border-amber-300 dark:border-amber-800',
+        badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/80 dark:text-amber-200',
+        text: 'text-amber-950 dark:text-amber-100'
+      },
+      game: {
+        label: 'RA NET / GAME',
+        bg: 'bg-purple-50 dark:bg-purple-950/40',
+        border: 'border-purple-300 dark:border-purple-800',
+        badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/80 dark:text-purple-200',
+        text: 'text-purple-950 dark:text-purple-100'
+      },
+      date: {
+        label: 'ĐI DATE',
+        bg: 'bg-pink-50 dark:bg-pink-950/40',
+        border: 'border-pink-300 dark:border-pink-800',
+        badge: 'bg-pink-100 text-pink-800 dark:bg-pink-900/80 dark:text-pink-200',
+        text: 'text-pink-950 dark:text-pink-100'
+      },
+      self_study: {
+        label: 'TỰ HỌC',
+        bg: 'bg-slate-50 dark:bg-slate-900/50',
+        border: 'border-slate-300 dark:border-slate-700',
+        badge: 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
+        text: 'text-slate-900 dark:text-slate-100'
+      },
+      english: {
+        label: 'TIẾNG ANH NGOÀI',
+        bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+        border: 'border-emerald-300 dark:border-emerald-800',
+        badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-200',
+        text: 'text-emerald-950 dark:text-emerald-100'
+      },
+      life: {
+        label: '',
+        bg: 'bg-zinc-50 dark:bg-zinc-900/60',
+        border: 'border-zinc-200 dark:border-zinc-800',
+        badge: 'bg-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+        text: 'text-zinc-800 dark:text-zinc-200'
+      },
+      sleep: {
+        label: 'GIẤC NGỦ',
+        bg: 'bg-blue-50/70 dark:bg-blue-950/30',
+        border: 'border-blue-200 dark:border-blue-900',
+        badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200',
+        text: 'text-blue-950 dark:text-blue-200'
+      }
+    };
+
+    // Danh mục chi tiêu theo yêu cầu
+    const CATEGORIES = {
+      expense: {
+        food: { label: 'Ăn uống', icon: 'fa-utensils', color: '#f97316' },
+        transport: { label: 'Di chuyển', icon: 'fa-car', color: '#64748b' },
+        education: { label: 'Học tập', icon: 'fa-book-open', color: '#8b5cf6' },
+        entertainment: { label: 'Giải trí', icon: 'fa-gamepad', color: '#ec4899' },
+        savings: { label: 'Tiết kiệm', icon: 'fa-piggy-bank', color: '#10b981' },
+        other_expense: { label: 'Khác', icon: 'fa-tags', color: '#71717a' }
+      },
+      income: {
+        salary: { label: 'Tiền lương', icon: 'fa-money-bill-wave', color: '#22c55e' },
+        freelance: { label: 'Thu nhập phụ', icon: 'fa-laptop-code', color: '#06b6d4' },
+        bonus: { label: 'Thưởng / Quà', icon: 'fa-gift', color: '#a855f7' },
+        other_income: { label: 'Thu nhập khác', icon: 'fa-coins', color: '#14b8a6' }
+      }
+    };
+
+    const QUOTES = [
+      { text: "Chúng ta không thể thay đổi quá khứ, nhưng có thể kiến tạo tương lai bắt đầu từ kỷ luật hôm nay.", author: "Marcus Aurelius" },
+      { text: "Thay đổi nhỏ tích luỹ mỗi ngày sẽ tạo nên kết quả phi thường theo thời gian.", author: "James Clear (Atomic Habits)" },
+      { text: "Người duy nhất bạn nên cố gắng vượt qua là chính bạn của ngày hôm qua.", author: "Anonymous" },
+      { text: "Kỷ luật là chiếc cầu nối giữa mục tiêu và sự thành tựu vững bền.", author: "Jim Rohn" },
+      { text: "Đầu tư cho trí tuệ và sức khoẻ bản thân luôn là khoản đầu tư sinh lời cao nhất.", author: "Warren Buffett" }
+    ];
+
+    // Dữ liệu mẫu chuẩn xác 100% theo hình ảnh của người dùng
+    function getDefaultData() {
+      return {
+        user: {
+          name: "Bản Thân Tôi",
+          streak: 7,
+          weeklyBudget: 1500000,
+          theme: 'dark'
+        },
+        // dayOfWeek: 1: T2, 2: T3, 3: T4, 4: T5, 5: T6, 6: T7, 0: CN
+        tasks: [
+          // THỨ 2
+          { id: 't_m1', day: 1, title: 'Dậy, ăn sáng', time: '06:00 - 07:00', category: 'life', completed: true },
+          { id: 't_m2', day: 1, title: 'Tiết 1 - 6: TH Lập trình CSDL & Mạng', time: '07:00 - 11:55', category: 'school', completed: true },
+          { id: 't_m3', day: 1, title: 'Ăn trưa, nghỉ ngơi', time: '12:00 - 13:30', category: 'life', completed: true },
+          { id: 't_m4', day: 1, title: 'Ngực + Tay sau', time: '15:00 - 16:30', category: 'gym', completed: true },
+          { id: 't_m5', day: 1, title: 'Giải bài tập môn khó (Code HĐT)', time: '19:30 - 21:00', category: 'self_study', completed: true },
+          { id: 't_m6', day: 1, title: 'Ôn bài Tiếng Anh ngoài', time: '21:00 - 22:30', category: 'self_study', completed: true },
+          { id: 't_m7', day: 1, title: 'Thư giãn tự do', time: '22:30 - 23:00', category: 'life', completed: false },
+          { id: 't_m8', day: 1, title: 'Đi ngủ', time: '23:00 - 06:00', category: 'sleep', completed: false },
+
+          // THỨ 3 (Theo đúng ảnh)
+          { id: 't_tu1', day: 2, title: 'Dậy, ăn sáng', time: '', category: 'life', completed: true },
+          { id: 't_tu2', day: 2, title: 'Tiết 1 - 6\nTH Lập trình HĐT\n(07:00 - 11:55)', time: '07:00 - 11:55', category: 'school', completed: true },
+          { id: 't_tu3', day: 2, title: 'Luyện Aim & Game (2h)\n(13:30 - 15:30)', time: '13:30 - 15:30', category: 'game', completed: true },
+          { id: 't_tu4', day: 2, title: 'Lưng + Tay trước\n(16:00 - 17:30)', time: '16:00 - 17:30', category: 'gym', completed: false },
+          { id: 't_tu5', day: 2, title: 'Giải bài tập môn khó (Kỹ thuật truyền số liệu + Code HĐT)', time: '', category: 'self_study', completed: false },
+          { id: 't_tu6', day: 2, title: 'Làm BTVN Tiếng Anh ngoài (cho T4)\n(20:30 - 22:00)', time: '20:30 - 22:00', category: 'self_study', completed: false },
+          { id: 't_tu7', day: 2, title: 'Thư giãn tự do', time: '', category: 'life', completed: false },
+          { id: 't_tu8', day: 2, title: 'Đi ngủ', time: '23:00 - 06:00', category: 'sleep', completed: false },
+
+          // THỨ 4 (Theo đúng ảnh)
+          { id: 't_w1', day: 3, title: 'Dậy, ăn sáng', time: '', category: 'life', completed: true },
+          { id: 't_w2', day: 3, title: 'Tiết 1 - 3: Tiếng Anh\n(07:00 - 09:25)', time: '07:00 - 09:25', category: 'school', completed: true },
+          { id: 't_w3', day: 3, title: 'Đi Thái Nguyên với người yêu\n(09:30 - 19:00)', time: '09:30 - 19:00', category: 'date', completed: false },
+          { id: 't_w4', day: 3, title: 'Di chuyển đi học Tiếng Anh ngoài (19:35 - 20:10)', time: '19:35 - 20:10', category: 'english', completed: false },
+          { id: 't_w5', day: 3, title: 'Học từ 20:15 - 22:15', time: '20:15 - 22:15', category: 'english', completed: false },
+          { id: 't_w6', day: 3, title: 'Về trọ, nghỉ ngơi', time: '', category: 'life', completed: false },
+          { id: 't_w7', day: 3, title: 'Đi ngủ', time: '23:15 - 06:00', category: 'sleep', completed: false },
+
+          // THỨ 5 (Theo đúng ảnh)
+          { id: 't_th1', day: 4, title: 'Dậy, ăn sáng', time: '', category: 'life', completed: false },
+          { id: 't_th2', day: 4, title: 'Tiết 1 - 3: Cơ sở dữ liệu\nTiết 4 - 6: Xử lý tín hiệu số\n(07:00 - 11:55)', time: '07:00 - 11:55', category: 'school', completed: false },
+          { id: 't_th3', day: 4, title: 'TH Hệ thống nhúng\n(13:15 - 18:45)', time: '13:15 - 18:45', category: 'school', completed: false },
+          { id: 't_th4', day: 4, title: 'Về trọ, tắm rửa, ăn tối, nghỉ ngơi', time: '', category: 'life', completed: false },
+          { id: 't_th5', day: 4, title: 'Ôn bài Tiếng Anh ngoài vừa học tối T4 (20:00 - 21:00)', time: '20:00 - 21:00', category: 'self_study', completed: false },
+          { id: 't_th6', day: 4, title: 'Làm BTVN Tiếng Anh ngoài (cho T6)\n(21:00 - 22:15)', time: '21:00 - 22:15', category: 'self_study', completed: false },
+          { id: 't_th7', day: 4, title: 'Thư giãn tự do', time: '', category: 'life', completed: false },
+          { id: 't_th8', day: 4, title: 'Đi ngủ', time: '23:00 - 06:00', category: 'sleep', completed: false },
+
+          // THỨ 6 (Theo đúng ảnh)
+          { id: 't_f1', day: 5, title: 'Dậy, ăn sáng', time: '', category: 'life', completed: false },
+          { id: 't_f2', day: 5, title: 'Vai + Bụng\n(07:30 - 09:00)', time: '07:30 - 09:00', category: 'gym', completed: false },
+          { id: 't_f3', day: 5, title: 'Tiết 4 - 6: Lập trình di động\n(09:30 - 11:55)', time: '09:30 - 11:55', category: 'school', completed: false },
+          { id: 't_f4', day: 5, title: 'Luyện Aim & Chơi game (3 tiếng)\n(14:00 - 17:00)', time: '14:00 - 17:00', category: 'game', completed: false },
+          { id: 't_f5', day: 5, title: 'Tắm rửa, ăn tối', time: '', category: 'life', completed: false },
+          { id: 't_f6', day: 5, title: 'Làm BTVN Lập trình di động / CSDL / Xử lý tín hiệu (18:30 - 19:30)', time: '18:30 - 19:30', category: 'self_study', completed: false },
+          { id: 't_f7', day: 5, title: 'Di chuyển (19:35)\nHọc từ 20:15 - 22:15', time: '20:15 - 22:15', category: 'english', completed: false },
+          { id: 't_f8', day: 5, title: 'Về trọ, nghỉ ngơi', time: '', category: 'life', completed: false },
+          { id: 't_f9', day: 5, title: 'Đi ngủ', time: '23:15 - 06:00', category: 'sleep', completed: false },
+
+          // THỨ 7 (Theo đúng ảnh)
+          { id: 't_sa1', day: 6, title: 'Dậy, ăn sáng', time: '', category: 'life', completed: false },
+          { id: 't_sa2', day: 6, title: 'Tiết 1 - 3: Tiếng Anh\n(07:00 - 09:25)', time: '07:00 - 09:25', category: 'school', completed: false },
+          { id: 't_sa3', day: 6, title: 'Chân + Mông\n(10:00 - 11:30)', time: '10:00 - 11:30', category: 'gym', completed: false },
+          { id: 't_sa4', day: 6, title: 'Ăn trưa nghỉ ngơi nhanh', time: '', category: 'life', completed: false },
+          { id: 't_sa5', day: 6, title: 'Luyện Aim & Chơi game (3 tiếng)\n(14:00 - 17:00)', time: '14:00 - 17:00', category: 'game', completed: false },
+          { id: 't_sa6', day: 6, title: 'Tắm rửa, ăn tối', time: '', category: 'life', completed: false },
+          { id: 't_sa7', day: 6, title: 'Đào sâu môn khó (Xử lý tín hiệu, CSDL, Nhúng)', time: '', category: 'self_study', completed: false },
+          { id: 't_sa8', day: 6, title: 'Làm BTVN Tiếng Anh ngoài (cho T2 tuần sau) (20:30 - 21:30)', time: '20:30 - 21:30', category: 'self_study', completed: false },
+          { id: 't_sa9', day: 6, title: 'Giải trí tự do / Đi chơi cuối tuần', time: '', category: 'life', completed: false },
+          { id: 't_sa10', day: 6, title: 'Đi ngủ', time: '23:00 - 06:00', category: 'sleep', completed: false },
+
+          // CHỦ NHẬT (Theo đúng ảnh)
+          { id: 't_su1', day: 0, title: 'Dậy, ăn sáng (07:00 - 08:00)', time: '07:00 - 08:00', category: 'life', completed: false },
+          { id: 't_su2', day: 0, title: 'Luyện Aim & Chơi game (3 tiếng)\n(08:30 - 11:30)', time: '08:30 - 11:30', category: 'game', completed: false },
+          { id: 't_su3', day: 0, title: 'Ăn trưa, nghỉ ngơi tự do / Rà soát bài vở\n(11:30 - 16:30)', time: '11:30 - 16:30', category: 'life', completed: false },
+          { id: 't_su4', day: 0, title: 'Nghỉ ngơi, thể thao nhẹ / Dạo phố', time: '', category: 'life', completed: false },
+          { id: 't_su5', day: 0, title: 'Nghỉ ngơi hoàn toàn, dành thời gian cho bản thân / Gia đình / Bạn bè', time: '', category: 'life', completed: false },
+          { id: 't_su6', day: 0, title: 'Đi ngủ', time: '23:00 - 07:00', category: 'sleep', completed: false }
+        ],
+        transactions: [
+          { id: 'tx1', type: 'income', amount: 12000000, category: 'salary', note: 'Lương tháng nhận tài khoản', date: getFormatDateOffset(-4) },
+          { id: 'tx2', type: 'expense', amount: 150000, category: 'entertainment', note: 'Tiền chơi net & nước uống', date: getFormatDateOffset(-3) },
+          { id: 'tx3', type: 'expense', amount: 450000, category: 'education', note: 'Học phí Tiếng Anh ngoài', date: getFormatDateOffset(-2) },
+          { id: 'tx4', type: 'expense', amount: 350000, category: 'other_expense', note: 'Tiền đi date Thái Nguyên', date: getFormatDateOffset(-1) },
+          { id: 'tx5', type: 'expense', amount: 45000, category: 'food', note: 'Cơm trưa sinh viên', date: getFormatDateOffset(0) }
+        ]
+      };
+    }
+
+    function getFormatDateOffset(daysOffset = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return d.toISOString().split('T')[0];
+    }
+
+    let AppState = {};
+    let currentTab = 'dashboard';
+    let editingTransactionId = null;
+    let dashChart = null;
+    let financeChart = null;
+    let cloudClient = null;
+    let cloudUser = null;
+    let cloudChannel = null;
+    let cloudSaveTimer = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          AppState = JSON.parse(raw);
+          return;
+        }
+      } catch (e) {
+        console.error("Lỗi đọc LocalStorage", e);
+      }
+      AppState = getDefaultData();
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
+        scheduleCloudSave();
+      } catch (e) {
+        console.error("Lỗi lưu LocalStorage", e);
+      }
+    }
+
+    function setCloudStatus(message) {
+      const el = document.getElementById('cloud-sync-status');
+      if (el) el.textContent = message;
+    }
+
+    function initCloudSync() {
+      const config = window.LUNAND_SUPABASE_CONFIG;
+      if (!config || !config.url || !config.anonKey) {
+        setCloudStatus('Đồng bộ chưa cấu hình. Cần kết nối Supabase để dùng chung dữ liệu trên web và iPhone.');
+        return;
+      }
+      if (!window.supabase) {
+        setCloudStatus('Không tải được thư viện đồng bộ. Hãy kết nối Internet rồi tải lại trang.');
+        return;
+      }
+      cloudClient = window.supabase.createClient(config.url, config.anonKey);
+      cloudClient.auth.onAuthStateChange((event, session) => {
+        cloudUser = session ? session.user : null;
+        if (cloudUser) {
+          setCloudStatus(`Đã đăng nhập ${cloudUser.email || ''}; đang đồng bộ…`);
+          setTimeout(() => connectCloudSync(cloudUser), 0);
+        } else {
+          if (cloudChannel) cloudClient.removeChannel(cloudChannel);
+          cloudChannel = null;
+          setCloudStatus('Chưa đăng nhập. Dữ liệu hiện chỉ lưu trên thiết bị này.');
+        }
+      });
+    }
+
+    async function connectCloudSync(user) {
+      if (!cloudClient || !user) return;
+      const { data, error } = await cloudClient.from('lunand_user_data').select('data, updated_at').eq('user_id', user.id).maybeSingle();
+      if (error) {
+        setCloudStatus(`Lỗi đọc dữ liệu đồng bộ: ${error.message}`);
+        return;
+      }
+if (data && localStorage.getItem('LUNAND_CLOUD_DIRTY') === user.id) {
+        const { error: saveError } = await cloudClient.from('lunand_user_data').upsert({ user_id: user.id, data: AppState, updated_at: new Date().toISOString() });
+        if (saveError) { setCloudStatus(`Chưa đồng bộ được dữ liệu thiết bị: ${saveError.message}`); return; }
+        localStorage.removeItem('LUNAND_CLOUD_DIRTY');
+        setCloudStatus('Đã tải các thay đổi đang chờ lên kho đồng bộ.');
+      } else if (data) {
+        AppState = data.data;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
+        renderAll();
+        setCloudStatus(`Đã đồng bộ dữ liệu (${new Date(data.updated_at).toLocaleString('vi-VN')}).`);
+      } else {
+        const { error: saveError } = await cloudClient.from('lunand_user_data').upsert({ user_id: user.id, data: AppState, updated_at: new Date().toISOString() });
+        if (saveError) {
+          setCloudStatus(`Lỗi tạo bản đồng bộ: ${saveError.message}`);
+          return;
+        }
+        setCloudStatus('Đã đưa dữ liệu thiết bị này lên kho đồng bộ.');
+      }
+      if (cloudChannel) cloudClient.removeChannel(cloudChannel);
+      cloudChannel = cloudClient.channel(`lunand-data-${user.id}`).on('postgres_changes', {
+        event: '*', schema: 'public', table: 'lunand_user_data', filter: `user_id=eq.${user.id}`
+      }, payload => {
+        if (!payload.new || !payload.new.data || localStorage.getItem('LUNAND_CLOUD_DIRTY') === user.id) return;
+        AppState = payload.new.data;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
+        renderAll();
+        setCloudStatus(`Đã nhận cập nhật (${new Date(payload.new.updated_at).toLocaleTimeString('vi-VN')}).`);
+      }).subscribe();
+    }
+
+function scheduleCloudSave() {
+      if (!cloudClient || !cloudUser) return;
+      localStorage.setItem('LUNAND_CLOUD_DIRTY', cloudUser.id);
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(async () => {
+        setCloudStatus('Đang đồng bộ dữ liệu…');
+        const { error } = await cloudClient.from('lunand_user_data').upsert({
+          user_id: cloudUser.id, data: AppState, updated_at: new Date().toISOString()
+        });
+        if (error) setCloudStatus(`Chưa đồng bộ được: ${error.message}`);
+        else {
+          localStorage.removeItem('LUNAND_CLOUD_DIRTY');
+          setCloudStatus(`Đã đồng bộ lúc ${new Date().toLocaleTimeString('vi-VN')}.`);
+        }
+      }, 800);
+    }
+
+
+
+    async function signInCloudSync() {
+      if (!cloudClient) return setCloudStatus('Đồng bộ chưa cấu hình.');
+      const email = document.getElementById('cloud-email').value.trim();
+      const password = document.getElementById('cloud-password').value;
+      const { error } = await cloudClient.auth.signInWithPassword({ email, password });
+      if (error) setCloudStatus(`Đăng nhập thất bại: ${error.message}`);
+    }
+
+    async function signUpCloudSync() {
+      if (!cloudClient) return setCloudStatus('Đồng bộ chưa cấu hình.');
+      const email = document.getElementById('cloud-email').value.trim();
+      const password = document.getElementById('cloud-password').value;
+      const { data, error } = await cloudClient.auth.signUp({ email, password });
+      if (error) setCloudStatus(`Tạo tài khoản thất bại: ${error.message}`);
+      else if (!data.session) setCloudStatus('Đã tạo tài khoản. Hãy xác nhận email, sau đó đăng nhập.');
+    }
+
+    async function signOutCloudSync() {
+      if (!cloudClient) return;
+      const { error } = await cloudClient.auth.signOut();
+      if (error) setCloudStatus(`Đăng xuất thất bại: ${error.message}`);
+    }
+    function formatVND(num) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      initCloudSync();
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+      window.addEventListener('online', () => { if (cloudUser) connectCloudSync(cloudUser); });
+      initTheme();
+      initClock();
+      renderAll();
+    });
+
+    function initTheme() {
+      const isDark = AppState.user.theme === 'dark';
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('dark-icon').className = 'fa-solid fa-sun text-sm text-amber-400';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('dark-icon').className = 'fa-solid fa-moon text-sm text-zinc-700';
+      }
+    }
+
+    function toggleDarkMode() {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      if (isCurrentlyDark) {
+        document.documentElement.classList.remove('dark');
+        AppState.user.theme = 'light';
+        document.getElementById('dark-icon').className = 'fa-solid fa-moon text-sm text-zinc-700';
+      } else {
+        document.documentElement.classList.add('dark');
+        AppState.user.theme = 'dark';
+        document.getElementById('dark-icon').className = 'fa-solid fa-sun text-sm text-amber-400';
+      }
+      saveState();
+      renderCharts();
+    }
+
+    function initClock() {
+      function updateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN');
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.textContent = timeStr;
+
+        const dateEl = document.getElementById('dash-date');
+        if (dateEl) {
+          dateEl.textContent = now.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+          });
+        }
+
+        const hour = now.getHours();
+        let greeting = "Chào buổi sáng 🌅";
+        if (hour >= 12 && hour < 18) greeting = "Chào buổi chiều ☀️";
+        else if (hour >= 18) greeting = "Chào buổi tối 🌙";
+        
+        const greetEl = document.getElementById('dash-greeting');
+        if (greetEl) {
+          greetEl.textContent = `${greeting}, ${AppState.user.name || 'bạn'}!`;
+        }
+      }
+      updateTime();
+      setInterval(updateTime, 1000);
+
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+      const q = QUOTES[dayOfYear % QUOTES.length];
+      document.getElementById('quote-text').textContent = `“${q.text}”`;
+      document.getElementById('quote-author').textContent = `— ${q.author}`;
+      document.getElementById('dash-streak').textContent = `${AppState.user.streak || 1} ngày kỷ luật liên tiếp`;
+    }
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeEl = document.getElementById(`tab-${tabId}`);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+        btn.classList.add('text-zinc-600', 'dark:text-zinc-400');
+      });
+      const activeNavBtn = document.getElementById(`nav-btn-${tabId}`);
+      if (activeNavBtn) {
+        activeNavBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+        activeNavBtn.classList.remove('text-zinc-600', 'dark:text-zinc-400');
+      }
+
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        const target = btn.getAttribute('data-target');
+        if (target === tabId) {
+          btn.className = 'mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400';
+        } else {
+          btn.className = 'mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400';
+        }
+      });
+
+      if (tabId === 'dashboard') renderDashboard();
+      else if (tabId === 'schedule') renderWeeklySchedule();
+      else if (tabId === 'finance') renderFinance();
+      else if (tabId === 'settings') renderSettings();
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderWeeklySchedule();
+      renderFinance();
+      renderSettings();
+    }
+
+
+    /* ===================================================
+       1. DASHBOARD CONTROLLER
+       =================================================== */
+    function renderDashboard() {
+      const tasks = AppState.tasks || [];
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter(t => t.completed).length;
+      const taskPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      document.getElementById('kpi-schedule-percent').textContent = `${taskPercent}%`;
+      document.getElementById('kpi-schedule-fraction').textContent = `${completedTasks}/${totalTasks} việc xong`;
+      document.getElementById('kpi-schedule-bar').style.width = `${taskPercent}%`;
+
+      const txs = AppState.transactions || [];
+      const now = new Date();
+      
+      const currentDay = now.getDay();
+      const diffToMon = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMon);
+      monday.setHours(0, 0, 0, 0);
+
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      let weekExpense = 0;
+      let monthExpense = 0;
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      txs.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const d = new Date(t.date + 'T00:00:00');
+
+        if (t.type === 'expense') {
+          totalExpense += amt;
+          if (d >= monday) weekExpense += amt;
+          if (d >= firstDayOfMonth) monthExpense += amt;
+        } else {
+          totalIncome += amt;
+        }
+      });
+
+      const netBalance = totalIncome - totalExpense;
+      const budget = AppState.user.weeklyBudget || 1500000;
+      const budgetPercent = Math.min(100, Math.round((weekExpense / budget) * 100));
+
+      document.getElementById('kpi-week-expense').textContent = formatVND(weekExpense);
+      document.getElementById('kpi-month-expense').textContent = formatVND(monthExpense);
+      document.getElementById('kpi-net-balance').textContent = formatVND(netBalance);
+      document.getElementById('kpi-budget-target').textContent = formatVND(budget);
+
+      document.getElementById('dash-budget-percent').textContent = `${budgetPercent}%`;
+      const dashBar = document.getElementById('dash-budget-bar');
+      dashBar.style.width = `${budgetPercent}%`;
+      if (weekExpense > budget) dashBar.className = 'h-full bg-rose-500 rounded-full transition-all duration-300';
+      else if (budgetPercent >= 80) dashBar.className = 'h-full bg-amber-500 rounded-full transition-all duration-300';
+      else dashBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-300';
+
+      renderTodayTasks(now.getDay());
+      renderDashboardChart();
+    }
+
+    function renderTodayTasks(todayDayIndex) {
+      const container = document.getElementById('dash-today-tasks-container');
+      const todayTasks = (AppState.tasks || []).filter(t => Number(t.day) === Number(todayDayIndex));
+
+      if (todayTasks.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+            <i class="fa-regular fa-calendar-plus text-2xl text-zinc-300 dark:text-zinc-700 mb-2"></i>
+            <p class="text-xs text-zinc-400">Hôm nay chưa có đầu việc nào.</p>
+            <button onclick="openAddTaskModal(${todayDayIndex})" class="mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              + Thêm việc cho hôm nay
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = todayTasks.map(t => {
+        const cat = TIMETABLE_CATEGORIES[t.category] || TIMETABLE_CATEGORIES.life;
+        return `
+          <div class="task-card-item flex items-center justify-between p-3 rounded-2xl ${cat.bg} border ${cat.border} ${t.completed ? 'completed' : ''}">
+            <div class="flex items-center gap-3 min-w-0">
+              <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskStatus('${t.id}')" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  ${cat.label ? `<span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded ${cat.badge}">${cat.label}</span>` : ''}
+                  ${t.time ? `<span class="text-[10px] text-zinc-500 font-mono font-medium">${t.time}</span>` : ''}
+                </div>
+                <p class="text-xs font-bold ${cat.text} truncate mt-0.5 ${t.completed ? 'line-through opacity-60' : ''}">
+                  ${escapeHtml(t.title).replace(/\n/g, ' ')}
+                </p>
+              </div>
+            </div>
+            <button onclick="deleteTask('${t.id}')" class="text-zinc-400 hover:text-rose-500 p-1 text-xs">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDashboardChart() {
+      const ctx = document.getElementById('dash-chart-doughnut');
+      if (!ctx) return;
+
+      const txs = (AppState.transactions || []).filter(t => t.type === 'expense');
+      const catTotals = {};
+
+      txs.forEach(t => {
+        catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount);
+      });
+
+      const labels = [];
+      const data = [];
+      const colors = [];
+
+      Object.keys(catTotals).forEach(k => {
+        const cat = CATEGORIES.expense[k] || { label: 'Khác', color: '#94a3b8' };
+        labels.push(cat.label);
+        data.push(catTotals[k]);
+        colors.push(cat.color);
+      });
+
+      if (dashChart) dashChart.destroy();
+
+      const isDark = document.documentElement.classList.contains('dark');
+
+      if (data.length === 0) {
+        dashChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Chưa có khoản chi'],
+            datasets: [{ data: [1], backgroundColor: [isDark ? '#27272a' : '#e4e4e7'] }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            cutout: '72%'
+          }
+        });
+        return;
+      }
+
+      dashChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: isDark ? '#18181b' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 10,
+                color: isDark ? '#d4d4d8' : '#3f3f46',
+                font: { size: 10 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (c) => ` ${c.label}: ${formatVND(c.raw)}`
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+
+    /* ===================================================
+       2. BẢNG THỜI KHÓA BIỂU 7 NGÀY MA TRẬN CHUẨN
+       =================================================== */
+    const DAY_ORDER = [
+      { id: 1, name: 'Thứ 2' },
+      { id: 2, name: 'Thứ 3' },
+      { id: 3, name: 'Thứ 4' },
+      { id: 4, name: 'Thứ 5' },
+      { id: 5, name: 'Thứ 6' },
+      { id: 6, name: 'Thứ 7' },
+      { id: 0, name: 'Chủ Nhật' }
+    ];
+
+    function renderWeeklySchedule() {
+      const container = document.getElementById('timetable-matrix-body');
+      if (!container) return;
+
+      const allTasks = AppState.tasks || [];
+      const now = new Date();
+      const todayDay = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + (todayDay === 0 ? -6 : 1 - todayDay));
+      monday.setHours(0, 0, 0, 0);
+
+      // Cập nhật highlight ngày hôm nay trên thanh header xanh
+      DAY_ORDER.forEach(day => {
+        const el = document.getElementById(`header-col-${day.id}`);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + (day.id === 0 ? 6 : day.id - 1));
+        const dateLabel = date.toLocaleDateString('vi-VN');
+        if (!el) return;
+        el.className = `py-2 px-2 flex flex-col items-center justify-center gap-0.5 ${day.id === todayDay ? 'bg-[#144569] font-black' : ''}`;
+        el.innerHTML = `<span>${day.name}</span><span class="text-[10px] font-medium opacity-90">${dateLabel}</span>${day.id === todayDay ? '<span class="text-[9px] px-1 rounded bg-amber-400 text-zinc-900 font-bold">HÔM NAY</span>' : ''}`;
+      });
+
+      // Render 7 cột thân bảng
+      container.innerHTML = DAY_ORDER.map(day => {
+        const dayTasks = allTasks.filter(t => Number(t.day) === day.id);
+        const isToday = day.id === todayDay;
+
+        return `
+          <div class="p-2 sm:p-2.5 flex flex-col justify-between space-y-2 ${isToday ? 'bg-blue-50/20 dark:bg-blue-950/20' : ''}">
+            
+            <!-- Danh sách công việc theo trình tự thời gian -->
+            <div class="space-y-2">
+              ${dayTasks.length === 0 ? `
+                <div class="py-10 text-center text-xs text-zinc-400">
+                  <p>Trống lịch</p>
+                </div>
+              ` : dayTasks.map(task => renderMatrixTaskBlock(task)).join('')}
+            </div>
+
+            <!-- Nút thêm việc nhanh cho cột ngày này -->
+            <button onclick="openAddTaskModal(${day.id})" class="w-full mt-3 py-1.5 px-2 rounded-xl text-[11px] font-bold text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800 transition flex items-center justify-center gap-1 border border-dashed border-zinc-300 dark:border-zinc-700">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              Thêm việc
+            </button>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render từng Block thẻ công việc theo phong cách chuẩn như hình ảnh
+    function renderMatrixTaskBlock(task) {
+      const cat = TIMETABLE_CATEGORIES[task.category] || TIMETABLE_CATEGORIES.life;
+      const formattedTitle = escapeHtml(task.title).replace(/\n/g, '<br>');
+
+      return `
+        <div class="task-card-item group relative p-2 rounded-xl ${cat.bg} border ${cat.border} shadow-xs ${task.completed ? 'completed' : ''}">
+          
+          <!-- Huy hiệu Danh mục (HỌC TRƯỜNG, TẬP GYM, RA NET...) -->
+          ${cat.label ? `
+            <div class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded text-center tracking-wider mb-1.5 ${cat.badge}">
+              ${cat.label}
+            </div>
+          ` : ''}
+
+          <!-- Tiêu đề & Nội dung mô tả -->
+          <div class="text-xs font-semibold ${cat.text} leading-snug break-words">
+            ${formattedTitle}
+          </div>
+
+          <!-- Khung giờ in đậm trong ngoặc nếu có và chưa nằm trong title -->
+          ${task.time && !task.title.includes(task.time) ? `
+            <div class="text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400 mt-1">
+              (${task.time})
+            </div>
+          ` : ''}
+
+          <!-- Thanh điều khiển: Checkbox hoàn thành, Sửa, Xóa -->
+          <div class="flex items-center justify-between pt-1.5 mt-1 border-t border-black/5 dark:border-white/5">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTaskStatus('${task.id}')" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer">
+              <span>${task.completed ? 'Đã làm' : 'Hoàn thành'}</span>
+            </label>
+
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <button onclick="openEditTaskModal('${task.id}')" class="text-zinc-400 hover:text-blue-500 p-0.5 text-[11px]" title="Sửa việc">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteTask('${task.id}')" class="text-zinc-400 hover:text-rose-500 p-0.5 text-[11px]" title="Xóa việc">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    function toggleTaskStatus(taskId) {
+      const task = (AppState.tasks || []).find(t => t.id === taskId);
+      if (task) {
+        task.completed = !task.completed;
+        saveState();
+        renderDashboard();
+        renderWeeklySchedule();
+      }
+    }
+
+    function deleteTask(taskId) {
+      if (confirm("Bạn có chắc chắn muốn xóa mục này khỏi lịch trình?")) {
+        AppState.tasks = (AppState.tasks || []).filter(t => t.id !== taskId);
+        saveState();
+        renderDashboard();
+        renderWeeklySchedule();
+        showToast("Đã xóa công việc", "info");
+      }
+    }
+
+    function resetWeeklyTasksCheckmarks() {
+      if (confirm("Bắt đầu tuần mới? Tất cả công việc trong tuần sẽ được bỏ tích để bạn tiếp tục thực hiện mà không cần gõ lại từ đầu.")) {
+        (AppState.tasks || []).forEach(t => t.completed = false);
+        saveState();
+        renderDashboard();
+        renderWeeklySchedule();
+        showToast("Đã làm mới tuần thành công! 🚀", "success");
+      }
+    }
+
+    function openAddTaskModal(prefillDay = 1) {
+      document.getElementById('task-form').reset();
+      document.getElementById('task-id').value = '';
+      document.getElementById('task-day').value = prefillDay;
+      document.getElementById('task-category').value = 'school';
+      document.getElementById('task-priority').value = 'normal';
+      setTaskTimePicker('start', 420);
+      setTaskTimePicker('end', 510);
+      document.getElementById('task-modal-title').textContent = "Thêm Việc Vào Lịch Tuần";
+      document.getElementById('task-modal').classList.add('active');
+    }
+
+    function openEditTaskModal(taskId) {
+      const task = (AppState.tasks || []).find(t => t.id === taskId);
+      if (!task) return;
+      document.getElementById('task-id').value = task.id;
+      document.getElementById('task-title').value = task.title;
+      document.getElementById('task-day').value = task.day;
+const parsedTime = (task.time || '').match(/(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})/);
+      setTaskTimePicker('start', parsedTime ? Number(parsedTime[1]) * 60 + Number(parsedTime[2]) : 420);
+      setTaskTimePicker('end', parsedTime ? Number(parsedTime[3]) * 60 + Number(parsedTime[4]) : 510);
+      document.getElementById('task-category').value = task.category || 'life';
+      document.getElementById('task-priority').value = task.priority || 'normal';
+      document.getElementById('task-modal-title').textContent = "Chỉnh Sửa Công Việc";
+      document.getElementById('task-modal').classList.add('active');
+    }
+
+    function formatTaskTime(minutes) {
+      const value = Number(minutes);
+      return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+    }
+
+    function setTaskTimePicker(which, minutes) {
+      const value = Math.max(0, Math.min(1435, Math.round(Number(minutes) / 5) * 5));
+      const hour = Math.floor(value / 60), minute = value % 60;
+      document.getElementById(`task-time-${which}`).value = value;
+      document.getElementById(`task-time-${which}-label`).textContent = formatTaskTime(value);
+      const picker = document.getElementById(`task-time-${which}-picker`);
+      const wheelHtml = (unit, values, selected) => `<div class="time-wheel" data-unit="${unit}" tabindex="0" role="listbox" aria-label="${unit === 'hour' ? 'Giờ' : 'Phút'}"><div class="time-wheel-spacer"></div>${values.map(item => `<div class="time-wheel-item${item === selected ? ' selected' : ''}" data-value="${item}" role="option" aria-selected="${item === selected}">${String(item).padStart(2, '0')}</div>`).join('')}<div class="time-wheel-spacer"></div></div>`;
+      picker.innerHTML = `${wheelHtml('hour', Array.from({ length: 24 }, (_, i) => i), hour)}<span class="time-wheel-separator">:</span>${wheelHtml('minute', Array.from({ length: 12 }, (_, i) => i * 5), minute)}`;
+      picker.querySelectorAll('.time-wheel').forEach(wheel => {
+        const options = wheel.querySelectorAll('.time-wheel-item');
+        const initial = Array.from(options).findIndex(option => Number(option.dataset.value) === (wheel.dataset.unit === 'hour' ? hour : minute));
+        wheel.scrollTop = initial * 36;
+        let timer, startY = 0, startScroll = 0;
+        wheel.addEventListener('pointerdown', event => {
+          if (event.pointerType !== 'mouse' || event.button !== 0) return;
+          startY = event.clientY; startScroll = wheel.scrollTop;
+          wheel.setPointerCapture(event.pointerId); wheel.style.cursor = 'grabbing';
+        });
+        wheel.addEventListener('pointermove', event => {
+          if (event.pointerType === 'mouse' && wheel.hasPointerCapture(event.pointerId)) {
+            wheel.scrollTop = startScroll + startY - event.clientY; event.preventDefault();
+          }
+        });
+        const release = event => {
+          if (event.pointerType === 'mouse' && wheel.hasPointerCapture(event.pointerId)) wheel.releasePointerCapture(event.pointerId);
+          wheel.style.cursor = 'grab';
+        };
+        wheel.addEventListener('pointerup', release); wheel.addEventListener('pointercancel', release);
+        wheel.addEventListener('scroll', () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const index = Math.max(0, Math.min(options.length - 1, Math.round(wheel.scrollTop / 36)));
+            const option = options[index];
+            options.forEach(item => { const active = item === option; item.classList.toggle('selected', active); item.setAttribute('aria-selected', String(active)); });
+            const current = Number(document.getElementById(`task-time-${which}`).value);
+            const next = wheel.dataset.unit === 'hour' ? Number(option.dataset.value) * 60 + current % 60 : Math.floor(current / 60) * 60 + Number(option.dataset.value);
+            document.getElementById(`task-time-${which}`).value = next;
+            document.getElementById(`task-time-${which}-label`).textContent = formatTaskTime(next);
+          }, 60);
+        }, { passive: true });
+      });
+    }
+
+    function closeTaskModal() {
+      document.getElementById('task-modal').classList.remove('active');
+    }
+
+    function handleSaveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById('task-id').value;
+      const title = document.getElementById('task-title').value.trim();
+      const day = parseInt(document.getElementById('task-day').value, 10);
+      const time = `${formatTaskTime(document.getElementById('task-time-start').value)} - ${formatTaskTime(document.getElementById('task-time-end').value)}`;
+      const category = document.getElementById('task-category').value;
+      const priority = document.getElementById('task-priority').value;
+
+      if (!title) return;
+
+      if (id) {
+        const t = (AppState.tasks || []).find(x => x.id === id);
+        if (t) {
+          t.title = title;
+          t.day = day;
+          t.time = time;
+          t.category = category;
+          t.priority = priority;
+        }
+        showToast("Đã cập nhật công việc!", "success");
+      } else {
+        const newTask = {
+          id: 'task_' + Date.now(),
+          day: day,
+          title: title,
+          time: time,
+          category: category,
+          priority: priority,
+          completed: false
+        };
+        if (!AppState.tasks) AppState.tasks = [];
+        AppState.tasks.push(newTask);
+        showToast("Đã thêm việc vào lịch trình!", "success");
+      }
+
+      saveState();
+      closeTaskModal();
+      renderDashboard();
+      renderWeeklySchedule();
+    }
+
+
+    /* ===================================================
+       3. QUẢN LÝ CHI TIÊU & TÀI CHÍNH
+       =================================================== */
+    function renderFinance() {
+      const txs = AppState.transactions || [];
+      const now = new Date();
+
+      const currentDay = now.getDay();
+      const diffToMon = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMon);
+      monday.setHours(0, 0, 0, 0);
+
+      let weekExpense = 0;
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      txs.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const d = new Date(t.date + 'T00:00:00');
+
+        if (t.type === 'expense') {
+          totalExpense += amt;
+          if (d >= monday) weekExpense += amt;
+        } else {
+          totalIncome += amt;
+        }
+      });
+
+      const netBalance = totalIncome - totalExpense;
+      const weeklyBudget = AppState.user.weeklyBudget || 1500000;
+      const budgetPercent = Math.min(100, Math.round((weekExpense / weeklyBudget) * 100));
+
+      document.getElementById('fin-total-income').textContent = formatVND(totalIncome);
+      document.getElementById('fin-total-expense').textContent = formatVND(totalExpense);
+      document.getElementById('fin-net-balance').textContent = formatVND(netBalance);
+
+      document.getElementById('budget-current-spent').textContent = formatVND(weekExpense);
+      document.getElementById('budget-limit-display').textContent = formatVND(weeklyBudget);
+      document.getElementById('budget-percent-text').textContent = `${budgetPercent}%`;
+
+      const pBar = document.getElementById('budget-progress-bar');
+      pBar.style.width = `${budgetPercent}%`;
+
+      const statusBadge = document.getElementById('budget-status-badge');
+      const alertMsg = document.getElementById('budget-alert-message');
+
+      if (weekExpense > weeklyBudget) {
+        pBar.className = 'h-full bg-rose-600 rounded-full transition-all duration-300';
+        statusBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 animate-pulse';
+        statusBadge.textContent = 'Cảnh Báo Vượt Mức!';
+        alertMsg.innerHTML = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Bạn đã chi tiêu vượt hạn mức ${formatVND(weekExpense - weeklyBudget)}!</span> Hãy cắt giảm ngay các khoản không thiết yếu.`;
+      } else if (budgetPercent >= 80) {
+        pBar.className = 'h-full bg-amber-500 rounded-full transition-all duration-300';
+        statusBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300';
+        statusBadge.textContent = 'Gần Đạt Ngưỡng';
+        alertMsg.innerHTML = `<span class="text-amber-500 font-semibold">Chú ý: Đã chi ${budgetPercent}% hạn mức.</span> Còn lại ${formatVND(weeklyBudget - weekExpense)} cho những ngày còn lại.`;
+      } else {
+        pBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-300';
+        statusBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300';
+        statusBadge.textContent = 'An toàn';
+        alertMsg.innerHTML = `Chi tiêu trong tầm kiểm soát. Còn dư <strong class="text-emerald-500">${formatVND(weeklyBudget - weekExpense)}</strong> trong tuần này.`;
+      }
+
+      renderTransactionsList();
+      renderFinanceChart();
+    }
+
+    function renderTransactionsList() {
+      const container = document.getElementById('transactions-list-container');
+      const filterCat = document.getElementById('filter-tx-category')?.value || 'all';
+
+      let list = (AppState.transactions || []).slice();
+
+      if (filterCat !== 'all') {
+        if (filterCat === 'income') {
+          list = list.filter(t => t.type === 'income');
+        } else {
+          list = list.filter(t => t.type === 'expense' && t.category === filterCat);
+        }
+      }
+
+      list.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+            <i class="fa-solid fa-receipt text-3xl text-zinc-300 dark:text-zinc-700 mb-2"></i>
+            <p class="text-xs text-zinc-400">Không có giao dịch nào phù hợp</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(t => {
+        const isExpense = t.type === 'expense';
+        const catMap = isExpense ? CATEGORIES.expense : CATEGORIES.income;
+        const catInfo = catMap[t.category] || { label: 'Khác', icon: 'fa-tag', color: '#71717a' };
+
+        return `
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-800/80 transition">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background-color: ${catInfo.color}20; color: ${catInfo.color}">
+                <i class="fa-solid ${catInfo.icon} text-sm"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">
+                    ${catInfo.label}
+                  </span>
+                  <span class="text-[10px] text-zinc-400 font-medium">
+                    ${t.date}
+                  </span>
+                </div>
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                  ${escapeHtml(t.note || 'Không có ghi chú')}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0 pl-2">
+              <span class="text-xs sm:text-sm font-extrabold ${isExpense ? 'text-rose-500' : 'text-emerald-500'}">
+                ${isExpense ? '-' : '+'}${formatVND(t.amount)}
+              </span>
+              <button onclick="editTransaction('${t.id}')" class="text-zinc-400 hover:text-blue-500 p-1 text-xs" title="Sửa giao dịch" aria-label="Sửa giao dịch">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
+              <button onclick="deleteTransaction('${t.id}')" class="text-zinc-400 hover:text-rose-500 p-1 text-xs" title="Xóa giao dịch">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFinanceChart() {
+      const ctx = document.getElementById('finance-doughnut-chart');
+      if (!ctx) return;
+
+      const txs = (AppState.transactions || []).filter(t => t.type === 'expense');
+      const catTotals = {};
+
+      txs.forEach(t => {
+        catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount);
+      });
+
+      const labels = [];
+      const data = [];
+      const colors = [];
+
+      Object.keys(catTotals).forEach(k => {
+        const cat = CATEGORIES.expense[k] || { label: 'Khác', color: '#94a3b8' };
+        labels.push(cat.label);
+        data.push(catTotals[k]);
+        colors.push(cat.color);
+      });
+
+      if (financeChart) financeChart.destroy();
+
+      const isDark = document.documentElement.classList.contains('dark');
+
+      if (data.length === 0) {
+        financeChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Chưa có khoản chi'],
+            datasets: [{ data: [1], backgroundColor: [isDark ? '#27272a' : '#e4e4e7'] }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            cutout: '68%'
+          }
+        });
+        return;
+      }
+
+      financeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: isDark ? '#18181b' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                color: isDark ? '#d4d4d8' : '#3f3f46',
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (c) => ` ${c.label}: ${formatVND(c.raw)}`
+              }
+            }
+          },
+          cutout: '68%'
+        }
+      });
+    }
+
+    function deleteTransaction(txId) {
+      if (confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
+        AppState.transactions = (AppState.transactions || []).filter(t => t.id !== txId);
+        saveState();
+        renderDashboard();
+        renderFinance();
+        showToast("Đã xóa giao dịch", "info");
+      }
+    }
+
+    function openAddTransactionModal(type = 'expense') {
+      const form = document.getElementById('tx-form');
+      form.reset();
+      editingTransactionId = null;
+      document.getElementById('tx-modal-title').textContent = 'Ghi Chép Giao Dịch';
+      document.getElementById('tx-submit-button').textContent = 'Lưu Giao Dịch';
+
+      const radio = document.querySelector(`input[name="tx-type"][value="${type}"]`);
+      if (radio) radio.checked = true;
+
+      updateCategoryOptions(type);
+      document.getElementById('tx-date').value = getFormatDateOffset(0);
+      document.getElementById('tx-modal').classList.add('active');
+    }
+
+    function editTransaction(txId) {
+      const transaction = (AppState.transactions || []).find(t => String(t.id) === String(txId));
+      if (!transaction) {
+        showToast('Không tìm thấy giao dịch cần sửa', 'danger');
+        return;
+      }
+
+      editingTransactionId = transaction.id;
+      document.querySelector(`input[name="tx-type"][value="${transaction.type}"]`).checked = true;
+      updateCategoryOptions(transaction.type);
+      document.getElementById('tx-amount').value = transaction.amount;
+      document.getElementById('tx-category').value = transaction.category;
+      document.getElementById('tx-date').value = transaction.date;
+      document.getElementById('tx-note').value = transaction.note || '';
+      document.getElementById('tx-modal-title').textContent = 'Sửa Giao Dịch';
+      document.getElementById('tx-submit-button').textContent = 'Cập Nhật Giao Dịch';
+      document.getElementById('tx-modal').classList.add('active');
+    }
+
+    function closeTxModal() {
+      document.getElementById('tx-modal').classList.remove('active');
+    }
+
+    function updateCategoryOptions(type) {
+      const select = document.getElementById('tx-category');
+      select.innerHTML = '';
+      const list = type === 'expense' ? CATEGORIES.expense : CATEGORIES.income;
+
+      Object.keys(list).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = list[key].label;
+        select.appendChild(opt);
+      });
+    }
+
+    function setTxAmount(val) {
+      document.getElementById('tx-amount').value = val;
+    }
+
+    function handleSaveTransaction(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="tx-type"]:checked')?.value || 'expense';
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const category = document.getElementById('tx-category').value;
+      const date = document.getElementById('tx-date').value;
+      const note = document.getElementById('tx-note').value.trim();
+
+      if (isNaN(amount) || amount <= 0) {
+        showToast("Vui lòng nhập số tiền hợp lệ (> 0 VNĐ)", "danger");
+        return;
+      }
+
+      if (!AppState.transactions) AppState.transactions = [];
+      if (editingTransactionId !== null) {
+        const transaction = AppState.transactions.find(t => String(t.id) === String(editingTransactionId));
+        if (!transaction) {
+          showToast('Không tìm thấy giao dịch cần cập nhật', 'danger');
+          return;
+        }
+        Object.assign(transaction, { type, amount, category, date, note });
+      } else {
+        AppState.transactions.push({
+          id: 'tx_' + Date.now(),
+          type,
+          amount,
+          category,
+          date,
+          note
+        });
+      }
+      saveState();
+
+      closeTxModal();
+      renderDashboard();
+      renderFinance();
+      showToast(
+        editingTransactionId !== null
+          ? 'Đã cập nhật giao dịch!'
+          : `Đã thêm ${type === 'expense' ? 'khoản chi' : 'khoản thu'} ${formatVND(amount)}!`,
+        'success'
+      );
+      editingTransactionId = null;
+    }
+
+    function openBudgetSettingModal() {
+      document.getElementById('setting-weekly-budget').value = AppState.user.weeklyBudget || 1500000;
+      document.getElementById('budget-modal').classList.add('active');
+    }
+
+    function closeBudgetModal() {
+      document.getElementById('budget-modal').classList.remove('active');
+    }
+
+    function saveWeeklyBudgetSetting() {
+      const val = parseFloat(document.getElementById('setting-weekly-budget').value);
+      if (isNaN(val) || val <= 0) {
+        showToast("Hạn mức phải lớn hơn 0 VNĐ", "danger");
+        return;
+      }
+      AppState.user.weeklyBudget = val;
+      saveState();
+      closeBudgetModal();
+      renderDashboard();
+      renderFinance();
+      showToast("Đã cập nhật hạn mức tuần mới! 🎯", "success");
+    }
+
+
+    /* ===================================================
+       4. CÀI ĐẶT & BACKUP JSON
+       =================================================== */
+    function renderSettings() {
+      document.getElementById('setting-user-name').value = AppState.user.name || '';
+      document.getElementById('setting-user-streak').value = AppState.user.streak || 0;
+    }
+
+    function saveUserProfileSettings() {
+      const name = document.getElementById('setting-user-name').value.trim();
+      const streak = parseInt(document.getElementById('setting-user-streak').value, 10);
+
+      AppState.user.name = name || "Bản Thân Tôi";
+      AppState.user.streak = isNaN(streak) ? 0 : streak;
+
+      saveState();
+      initClock();
+      showToast("Đã lưu thông tin bản thân!", "success");
+    }
+
+    function exportBackupJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AppState, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `PersonalLifeOS_Backup_${getFormatDateOffset(0)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("Đã tải xuống file sao lưu dữ liệu!", "success");
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && (parsed.tasks || parsed.transactions)) {
+            AppState = parsed;
+            saveState();
+            initTheme();
+            renderAll();
+            showToast("Khôi phục dữ liệu từ file thành công! 🚀", "success");
+          } else {
+            showToast("File JSON không hợp lệ!", "danger");
+          }
+        } catch (err) {
+          showToast("Lỗi đọc file: " + err.message, "danger");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function restoreSampleData() {
+      if (confirm("Khôi phục toàn bộ về bộ thời khóa biểu mẫu chuẩn (như trong ảnh)?")) {
+        AppState = getDefaultData();
+        saveState();
+        renderAll();
+        showToast("Đã đặt lại thời khóa biểu mẫu chuẩn!", "success");
+      }
+    }
+
+    function clearAllData() {
+      if (confirm("CẢNH BÁO: Hành động này sẽ xóa sạch toàn bộ lịch trình và chi tiêu của bạn. Bạn có chắc không?")) {
+        AppState.tasks = [];
+        AppState.transactions = [];
+        saveState();
+        renderAll();
+        showToast("Đã xóa sạch dữ liệu!", "info");
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-box');
+      if (!container) return;
+
+      const el = document.createElement('div');
+      let bg = 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900';
+      let icon = 'fa-circle-info';
+
+      if (type === 'success') {
+        bg = 'bg-emerald-600 text-white';
+        icon = 'fa-circle-check';
+      } else if (type === 'danger') {
+        bg = 'bg-rose-600 text-white';
+        icon = 'fa-circle-exclamation';
+      }
+
+      el.className = `flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold pointer-events-auto transform transition-all duration-300 translate-y-3 opacity-0 ${bg}`;
+      el.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+
+      container.appendChild(el);
+
+      requestAnimationFrame(() => {
+        el.classList.remove('translate-y-3', 'opacity-0');
+        el.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      setTimeout(() => {
+        el.classList.add('opacity-0', 'translate-y-3');
+        setTimeout(() => el.remove(), 300);
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeTaskModal();
+        closeTxModal();
+        closeBudgetModal();
+      }
+    });
+  </script>
+</body>
+</html>
